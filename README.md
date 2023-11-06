@@ -90,6 +90,8 @@ depending on the api status then rights checks are performed
 In case we are dealing with multiple error cases we can use ```DeclarativeAssertion``` to elegantly handle them
 
 ```java
+import static com.danieleperuzzi.assertion.DeclarativeAssertion.test; // used for readability
+
 ApiResponse apiResponse;
 
 Consumer<ApiResponse> testError = (response) -> {
