@@ -20,6 +20,23 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Consumer;
 
+/**
+ * This class helps in performing assertions specifically on response APIs because the pattern is always the same: on check
+ * for a success case and multiple checks depending on the error triggered
+ *
+ * The result of the application of this api assertion would be
+ *
+ * <pre>{@code
+ * new ApiAssertion<>(apiResponse)
+ *      .isSuccessful(r -> r.getStatus() == 200)
+ *      .onSuccess(r -> testOk(r))
+ *      .onFailure(r -> r.getStatus() == 400, r -> testKo400(r))
+ *      .onFailure(r -> r.getStatus() == 401, r -> testKo401(r))
+ *      .test();
+ * }</pre>
+ *
+ * @param <R>   the type of the API response to be tested
+ */
 public class ApiAssertion<R> {
 
     private R response;
@@ -28,6 +45,11 @@ public class ApiAssertion<R> {
     private Consumer<R> failureAssertions;
     private Map<Predicate<R>, Consumer<R>> failureAssertionMap = new HashMap<>();
 
+    /**
+     * Creates a new ApiAssertion
+     *
+     * @param response      the API response to test
+     */
     public ApiAssertion(R response) {
         this.response = response;
         this.isSuccessfulPredicate = null;
@@ -35,6 +57,14 @@ public class ApiAssertion<R> {
         this.failureAssertions = null;
     }
 
+    /**
+     * Defines the predicate that checks whenever the API response to be tested is a successful response
+     * or a failure response
+     *
+     * @param p             the predicate that performs the is successful test on the API response
+     * @return              this class instance to chain more actions
+     * @throws Exception    exception thrown in case we already defined one isSuccessful predicate
+     */
     public ApiAssertion<R> isSuccessful(Predicate<R> p) throws Exception {
         if (!Objects.isNull(isSuccessfulPredicate)) {
             throw new Exception("Define only one isSuccessful predicate");
@@ -45,6 +75,13 @@ public class ApiAssertion<R> {
         return this;
     }
 
+    /**
+     * Defines the assertions to be performed when the API response to be tested is a successful response
+     *
+     * @param ok            the test to be performed in case the API response is success
+     * @return              this class instance to chain more actions
+     * @throws Exception    exception thrown in case we already defined one onSuccess assertion
+     */
     public ApiAssertion<R> onSuccess(Consumer<R> ok) throws Exception {
         if (!Objects.isNull(successAssertions)) {
             throw new Exception("Define only one onSuccess assertion");
@@ -55,6 +92,13 @@ public class ApiAssertion<R> {
         return this;
     }
 
+    /**
+     * Defines the assertions to be performed when the API response to be tested is a failure response
+     *
+     * @param ko            the test to be performed in case the API response is failure
+     * @return              this class instance to chain more actions
+     * @throws Exception    exception thrown in case we already defined one onFailure assertion
+     */
     public ApiAssertion<R> onFailure(Consumer<R> ko) throws Exception {
         if (!Objects.isNull(failureAssertions)) {
             throw new Exception("Define only one onFailure assertion");
@@ -65,6 +109,14 @@ public class ApiAssertion<R> {
         return this;
     }
 
+    /**
+     * Defines multiple one failure assertions based on specific conditions. This is useful because the api response can fail
+     * in multiple ways so assertions may change between error cases
+     *
+     * @param p     the predicate that checks if the current assertions are the right ones for this specific error case
+     * @param ko    the test to be performed in case the API response is failure and the predicate is satisfied
+     * @return      this class instance to chain more actions
+     */
     public ApiAssertion<R> onFailure(Predicate<R> p, Consumer<R> ko) {
         failureAssertionMap.put(p, ko);
 
@@ -99,6 +151,17 @@ public class ApiAssertion<R> {
         testKo(response);
     }
 
+    /**
+     * Perform the API response test
+     *
+     * @throws Exception    exceptions are thrown in these cases:
+     *
+     *                      <ul>
+     *                          <li>the is successful check isn't defined</li>
+     *                          <li>no success or failure assertions are defined</li>
+     *                          <li>both simple and conditional on failure assertions are defined</li>
+     *                      </ul>
+     */
     public void test() throws Exception {
         Optional.ofNullable(isSuccessfulPredicate)
                 .orElseThrow(() -> new Exception("Define at least API predicate"));
