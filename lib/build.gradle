@@ -27,7 +27,7 @@ repositories {
 }
 
 group = 'io.github.danieleperuzzi'
-archivesBaseName = 'assertion'
+archivesBaseName = 'assertions'
 version = '1.0.0'
 
 dependencies {
@@ -80,7 +80,7 @@ publishing {
             pom {
                 name = archivesBaseName
                 description = 'This library contains some useful way to perform assertions also and specifically on API responses'
-                url = 'https://github.com/danieleperuzzi/assertion'
+                url = 'https://github.com/danieleperuzzi/assertions'
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
@@ -95,9 +95,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:https://github.com/danieleperuzzi/assertion'
-                    developerConnection = 'scm:git:https://github.com/danieleperuzzi/assertion'
-                    url = 'https://github.com/danieleperuzzi/assertion'
+                    connection = 'scm:git:https://github.com/danieleperuzzi/assertions'
+                    developerConnection = 'scm:git:https://github.com/danieleperuzzi/assertions'
+                    url = 'https://github.com/danieleperuzzi/assertions'
                 }
             }
         }

@@ -1,21 +1,25 @@
-# assertion
-Assertion helps in performing assertions in testing projects also on api responses
+# assertions
+
+Assertions helps in performing assertions in testing projects also on api responses
 
 ## Prerequisites
-- Java 17+
+
+- Java 8+
 - Gradle 8+ (gradle wrapper included)
 
 ## Installation
+
 Using Gradle
 
 ```
 dependencies {
-    implementation 'com.danieleperuzzi:assertion:1.0.0'
+    implementation 'io.github.danieleperuzzi:assertions:1.0.0'
 }
 ```
 
 ## Build library
-To build assertion library just run gradle build task:
+
+To build assertions library just run gradle build task:
 
 on Linux
 ```
@@ -30,7 +34,8 @@ on Windows
 you can also build the library using your machine gradle installation but please be sure gradle version is at least 8.
 
 ## Launch tests
-To launch the builtin test suite for assertion library just run gradle test task:
+
+To launch the builtin test suite for assertions library just run gradle test task:
 
 on Linux
 ```
