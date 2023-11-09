@@ -54,7 +54,7 @@ you can also test the library using your machine gradle installation but please 
 A more fashionable way to perform assertions if the condition is met or not
 
 ```java
-import static com.danieleperuzzi.assertion.DeclarativeAssertion.test; // used for readability
+import static io.github.danieleperuzzi.assertion.DeclarativeAssertion.test; // used for readability
 
 ApiResponse apiResponse;
 

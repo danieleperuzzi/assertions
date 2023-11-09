@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.danieleperuzzi.assertion.api;
+package io.github.danieleperuzzi.assertion.api;
 
 import java.util.*;
 import java.util.function.Predicate;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.danieleperuzzi.assertion.util;
+package io.github.danieleperuzzi.assertion.util;
 
 public class ApiResponseMock {
 

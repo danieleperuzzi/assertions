@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.danieleperuzzi.assertion.api;
+package io.github.danieleperuzzi.assertion.api;
 
-import com.danieleperuzzi.assertion.util.ApiResponseMock;
+import io.github.danieleperuzzi.assertion.util.ApiResponseMock;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

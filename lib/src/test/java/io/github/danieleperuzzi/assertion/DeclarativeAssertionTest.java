@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.danieleperuzzi.assertion;
+package io.github.danieleperuzzi.assertion;
 
-import com.danieleperuzzi.assertion.util.ApiResponseMock;
+import io.github.danieleperuzzi.assertion.util.ApiResponseMock;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static com.danieleperuzzi.assertion.DeclarativeAssertion.test;
+import static io.github.danieleperuzzi.assertion.DeclarativeAssertion.test;
 
 @ExtendWith(MockitoExtension.class)
 public class DeclarativeAssertionTest {
