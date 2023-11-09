@@ -2,6 +2,14 @@
 
 Assertions helps in performing assertions in testing projects also on api responses
 
+- [Prerequisites](#Prerequisites)
+- [Installation](#Installation)
+- [Build library](#Build-library)
+- [Launch tests](#Launch-tests)
+- [Usage](#Usage)
+    - [DeclarativeAssertion](#DeclarativeAssertion)
+    - [ApiAssertion](#ApiAssertion)
+
 ## Prerequisites
 
 - Java 8+
@@ -15,6 +23,16 @@ Using Gradle
 dependencies {
     implementation 'io.github.danieleperuzzi:assertions:1.0.0'
 }
+```
+
+Using Maven
+
+```xml
+<dependency>
+  <groupId>io.github.danieleperuzzi</groupId>
+  <artifactId>assertions</artifactId>
+  <version>1.0.0</version>
+</dependency>
 ```
 
 ## Build library
@@ -49,7 +67,9 @@ on Windows
 
 you can also test the library using your machine gradle installation but please be sure gradle version is at least 8.
 
-## DeclarativeAssertion
+## Usage
+
+### DeclarativeAssertion
 
 A more fashionable way to perform assertions if the condition is met or not
 
@@ -69,7 +89,7 @@ test(apiResponse)
 
 suppose api status is ```200``` then only the first assertion is performed
 
-## ApiAssertion
+### ApiAssertion
 
 Since every API has error handling it responds in different ways depending it is successful or failure and the structure 
 of the response may change depending on that.
