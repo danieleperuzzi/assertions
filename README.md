@@ -87,28 +87,15 @@ try {
 
 depending on the api status then rights checks are performed
 
-In case we are dealing with multiple error cases we can use ```DeclarativeAssertion``` to elegantly handle them
+In case we are dealing with multiple error cases we can use conditional ```onFailure``` to elegantly handle them
 
 ```java
-import static com.danieleperuzzi.assertion.DeclarativeAssertion.test; // used for readability
-
-ApiResponse apiResponse;
-
-Consumer<ApiResponse> testError = (response) -> {
-    test(response)
-        .when(r -> r.getStatus() == 400)
-        .then(r -> assertEquals("Error 400", r.getResponseBody().getStatus()));
-
-    test(response)
-        .when(r -> r.getStatus() == 401)
-        .then(r -> assertEquals("Error 401", r.getResponseBody().getStatus()));
-};
-
 try {
     new ApiAssertion<>(apiResponse)
         .isSuccessful(response -> response.getStatus() == 200)
         .onSuccess(response -> assertEquals("OK", response.getResponseBody().getStatus()))
-        .onFailure(testError)
+        .onFailure(response -> response.getStatus() == 400, response -> assertEquals("Error 400", response.getResponseBody().getStatus()))
+        .onFailure(response -> response.getStatus() == 401, response -> assertEquals("Error 401", response.getResponseBody().getStatus()))
         .test();
 } catch (Exception e) {
     e.printStackTrace();
