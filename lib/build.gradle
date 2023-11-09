@@ -9,7 +9,16 @@ plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
     id 'maven-publish'
+    id 'signing'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
@@ -17,9 +26,9 @@ repositories {
     mavenCentral()
 }
 
-group = 'com.danieleperuzzi'
+group = 'io.github.danieleperuzzi'
 archivesBaseName = 'assertion'
-version = '1.0.0-SNAPSHOT'
+version = '1.0.0'
 
 dependencies {
     // Use JUnit Jupiter for testing.
@@ -52,12 +61,45 @@ shadowJar {
 
 publishing {
     publications {
-        shadow(MavenPublication) { publication ->
+        mavenJava(MavenPublication) {
             groupId = group
             artifactId = archivesBaseName
             version = version
 
-            project.shadow.component(publication)
+            from components.java
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+
+            pom {
+                name = archivesBaseName
+                description = 'This library contains some useful way to perform assertions also and specifically on API responses'
+                url = 'https://github.com/danieleperuzzi/assertion'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'dperuzzi'
+                        name = 'Daniele Peruzzi'
+                        email = 'daniele.peruzzi88@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/danieleperuzzi/assertion'
+                    developerConnection = 'scm:git:https://github.com/danieleperuzzi/assertion'
+                    url = 'https://github.com/danieleperuzzi/assertion'
+                }
+            }
         }
     }
 
@@ -70,5 +112,11 @@ publishing {
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
+    }
+}
+
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
     }
 }
