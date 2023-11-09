@@ -24,11 +24,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static com.danieleperuzzi.assertion.DeclarativeAssertion.test;
 
 @ExtendWith(MockitoExtension.class)
 public class ApiAssertionTest {
@@ -72,12 +70,96 @@ public class ApiAssertionTest {
     }
 
     @Test
+    @DisplayName("define only one API isSuccessful predicate exception")
+    public void defineOnlyOneApiIsSuccessfulException() {
+        Exception exception = assertThrows(Exception.class, () -> {
+            new ApiAssertion<>(apiResponseOk)
+                    .isSuccessful(r -> r.getStatus() == 200)
+                    .isSuccessful(r -> r.getStatus() == 204)
+                    .test();
+        });
+
+        String expectedMessage = "Define only one isSuccessful predicate";
+        String actualMessage = exception.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("define only one API onSuccess assertion exception")
+    public void defineOnlyOneApiOnSuccessException() {
+        AtomicInteger testOk = new AtomicInteger(0);
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            new ApiAssertion<>(apiResponseOk)
+                    .isSuccessful(r -> r.getStatus() == 200)
+                    .onSuccess(r -> testOk.incrementAndGet())
+                    .onSuccess(r -> testOk.incrementAndGet())
+                    .test();
+        });
+
+        String expectedMessage = "Define only one onSuccess assertion";
+        String actualMessage = exception.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("define only one API onFailure assertion exception")
+    public void defineOnlyOneApiOnFailureException() {
+        AtomicInteger testKo = new AtomicInteger(0);
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            new ApiAssertion<>(apiResponseOk)
+                    .isSuccessful(r -> r.getStatus() == 200)
+                    .onFailure(r -> testKo.incrementAndGet())
+                    .onFailure(r -> testKo.incrementAndGet())
+                    .test();
+        });
+
+        String expectedMessage = "Define only one onFailure assertion";
+        String actualMessage = exception.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
+    @DisplayName("define only one API onFailure assertion or conditional onFailure assertions exception")
+    public void defineOnlyOneApiOnFailureOrConditionalOnFailureException() {
+        AtomicInteger testKo = new AtomicInteger(0);
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            new ApiAssertion<>(apiResponseOk)
+                    .isSuccessful(r -> r.getStatus() == 200)
+                    .onFailure(r -> testKo.incrementAndGet())
+                    .onFailure(r -> r.getStatus() == 400, r -> testKo.incrementAndGet())
+                    .test();
+        });
+
+        String expectedMessage = "Define only simple or conditional failure assertions";
+        String actualMessage = exception.getMessage();
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @Test
     @DisplayName("check onSuccess")
     public void checkOnSuccess() {
         AtomicInteger testOk = new AtomicInteger(0);
 
         try {
             new ApiAssertion<>(apiResponseOk)
+                    .isSuccessful(r -> r.getStatus() == 200)
+                    .onSuccess(r -> testOk.incrementAndGet())
+                    .test();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertEquals(1, testOk.get());
+
+        try {
+            new ApiAssertion<>(apiResponseKo)
                     .isSuccessful(r -> r.getStatus() == 200)
                     .onSuccess(r -> testOk.incrementAndGet())
                     .test();
@@ -94,6 +176,17 @@ public class ApiAssertionTest {
         AtomicInteger testKo = new AtomicInteger(0);
 
         try {
+            new ApiAssertion<>(apiResponseOk)
+                    .isSuccessful(r -> r.getStatus() == 200)
+                    .onFailure(r -> testKo.incrementAndGet())
+                    .test();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertEquals(0, testKo.get());
+
+        try {
             new ApiAssertion<>(apiResponseKo)
                     .isSuccessful(r -> r.getStatus() == 200)
                     .onFailure(r -> testKo.incrementAndGet())
@@ -103,6 +196,39 @@ public class ApiAssertionTest {
         }
 
         assertEquals(1, testKo.get());
+    }
+
+    @Test
+    @DisplayName("check conditional onFailure")
+    public void checkConditionalOnFailure() {
+        AtomicInteger testKo400 = new AtomicInteger(0);
+        AtomicInteger testKo401 = new AtomicInteger(0);
+
+        try {
+            new ApiAssertion<>(apiResponseOk) // check response KO
+                    .isSuccessful(r -> r.getStatus() == 200)
+                    .onFailure(r -> r.getStatus() == 400, r -> testKo400.incrementAndGet())
+                    .onFailure(r -> r.getStatus() == 401, r -> testKo401.incrementAndGet())
+                    .test();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertEquals(0, testKo400.get());
+        assertEquals(0, testKo401.get());
+
+        try {
+            new ApiAssertion<>(apiResponseKo) // check response KO
+                    .isSuccessful(r -> r.getStatus() == 200)
+                    .onFailure(r -> r.getStatus() == 400, r -> testKo400.incrementAndGet())
+                    .onFailure(r -> r.getStatus() == 401, r -> testKo401.incrementAndGet())
+                    .test();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertEquals(1, testKo400.get());
+        assertEquals(0, testKo401.get());
     }
 
     @Test
@@ -140,33 +266,39 @@ public class ApiAssertionTest {
     }
 
     @Test
-    @DisplayName("check multiple error cases")
-    public void checkMultipleErrorCases() {
+    @DisplayName("check onSuccess and conditional onFailure")
+    public void checkOnSuccessConditionalOnFailure() {
         AtomicInteger testOk = new AtomicInteger(0);
         AtomicInteger testKo400 = new AtomicInteger(0);
         AtomicInteger testKo401 = new AtomicInteger(0);
 
-        Consumer<ApiResponseMock> testError = (response) -> {
-            test(response)
-                    .when(r -> r.getStatus() == 400)
-                    .then(r -> testKo400.incrementAndGet());
-
-            test(response)
-                    .when(r -> r.getStatus() == 401)
-                    .then(r -> testKo401.incrementAndGet());
-        };
-
         try {
-            new ApiAssertion<>(apiResponseKo) // check response KO
+            new ApiAssertion<>(apiResponseOk) // check response KO
                     .isSuccessful(r -> r.getStatus() == 200)
                     .onSuccess(r -> testOk.incrementAndGet())
-                    .onFailure(testError)
+                    .onFailure(r -> r.getStatus() == 400, r -> testKo400.incrementAndGet())
+                    .onFailure(r -> r.getStatus() == 401, r -> testKo401.incrementAndGet())
                     .test();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        assertEquals(0, testOk.get());
+        assertEquals(1, testOk.get());
+        assertEquals(0, testKo400.get());
+        assertEquals(0, testKo401.get());
+
+        try {
+            new ApiAssertion<>(apiResponseKo) // check response KO
+                    .isSuccessful(r -> r.getStatus() == 200)
+                    .onSuccess(r -> testOk.incrementAndGet())
+                    .onFailure(r -> r.getStatus() == 400, r -> testKo400.incrementAndGet())
+                    .onFailure(r -> r.getStatus() == 401, r -> testKo401.incrementAndGet())
+                    .test();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertEquals(1, testOk.get());
         assertEquals(1, testKo400.get());
         assertEquals(0, testKo401.get());
     }

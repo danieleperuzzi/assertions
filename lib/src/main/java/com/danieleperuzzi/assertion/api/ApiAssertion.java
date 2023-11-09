@@ -16,78 +16,113 @@
 
 package com.danieleperuzzi.assertion.api;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Consumer;
 
 public class ApiAssertion<R> {
 
     private R response;
-    private Predicate<R> p;
-    private Consumer<R> ok;
-    private Consumer<R> ko;
+    private Predicate<R> isSuccessfulPredicate;
+    private Consumer<R> successAssertions;
+    private Consumer<R> failureAssertions;
+    private Map<Predicate<R>, Consumer<R>> failureAssertionMap = new HashMap<>();
 
     public ApiAssertion(R response) {
         this.response = response;
-        this.p = null;
-        this.ok = null;
-        this.ko = null;
+        this.isSuccessfulPredicate = null;
+        this.successAssertions = null;
+        this.failureAssertions = null;
     }
 
-    public ApiAssertion<R> isSuccessful(Predicate<R> p) {
-        this.p = p;
+    public ApiAssertion<R> isSuccessful(Predicate<R> p) throws Exception {
+        if (!Objects.isNull(isSuccessfulPredicate)) {
+            throw new Exception("Define only one isSuccessful predicate");
+        }
+
+        isSuccessfulPredicate = p;
 
         return this;
     }
 
-    public ApiAssertion<R> onSuccess(Consumer<R> ok) {
-        this.ok = ok;
+    public ApiAssertion<R> onSuccess(Consumer<R> ok) throws Exception {
+        if (!Objects.isNull(successAssertions)) {
+            throw new Exception("Define only one onSuccess assertion");
+        }
+
+        successAssertions = ok;
 
         return this;
     }
 
-    public ApiAssertion<R> onFailure(Consumer<R> ko) {
-        this.ko = ko;
+    public ApiAssertion<R> onFailure(Consumer<R> ko) throws Exception {
+        if (!Objects.isNull(failureAssertions)) {
+            throw new Exception("Define only one onFailure assertion");
+        }
+
+        failureAssertions = ko;
+
+        return this;
+    }
+
+    public ApiAssertion<R> onFailure(Predicate<R> p, Consumer<R> ko) {
+        failureAssertionMap.put(p, ko);
 
         return this;
     }
 
     private void testOk(R response) {
         Optional.of(response)
-                .filter(r -> p.test(r))
-                .ifPresent(r -> ok.accept(r));
+                .filter(r -> isSuccessfulPredicate.test(r))
+                .ifPresent(r -> successAssertions.accept(r));
+    }
+
+    private void testConditionalKo(R response) {
+        failureAssertionMap.entrySet()
+                .stream()
+                .filter(entry -> entry.getKey().test(response))
+                .forEach(entry -> entry.getValue().accept(response));
     }
 
     private void testKo(R response) {
         Optional.of(response)
-                .filter(r -> !p.test(r))
-                .ifPresent(r -> ko.accept(r));
+                .filter(r -> !isSuccessfulPredicate.test(r) && !Objects.isNull(failureAssertions) && failureAssertionMap.size() == 0)
+                .ifPresent(r -> failureAssertions.accept(r));
+
+        Optional.of(response)
+                .filter(r -> !isSuccessfulPredicate.test(r) && Objects.isNull(failureAssertions) && failureAssertionMap.size() > 0)
+                .ifPresent(this::testConditionalKo);
     }
 
     private void testOkKo(R response) {
-        Optional.of(response)
-                .filter(r -> p.test(r))
-                .ifPresentOrElse(r -> ok.accept(r), () -> ko.accept(response));
+        testOk(response);
+        testKo(response);
     }
 
     public void test() throws Exception {
-        Optional.ofNullable(p)
+        Optional.ofNullable(isSuccessfulPredicate)
                 .orElseThrow(() -> new Exception("Define at least API predicate"));
 
-        if (Objects.isNull(ok) && Objects.isNull(ko)) {
+        if (Objects.isNull(successAssertions) && Objects.isNull(failureAssertions) && failureAssertionMap.size() == 0) {
             throw new Exception("Define at least API onSuccess or onFailure assertions");
         }
 
-        if (!Objects.isNull(ok) && !Objects.isNull(ko)) {
+        if (!Objects.isNull(failureAssertions) && failureAssertionMap.size() > 0) {
+            throw new Exception("Define only simple or conditional failure assertions");
+        }
+
+        // perform success and failure assertions
+        if (!Objects.isNull(successAssertions) && (!Objects.isNull(failureAssertions) || failureAssertionMap.size() > 0)) {
             testOkKo(response);
         }
 
-        if (!Objects.isNull(ok) && Objects.isNull(ko)) {
+        // perform only success assertions
+        if (!Objects.isNull(successAssertions) && Objects.isNull(failureAssertions) && failureAssertionMap.size() == 0) {
             testOk(response);
         }
 
-        if (Objects.isNull(ok) && !Objects.isNull(ko)) {
+        // perform only failure assertions
+        if (Objects.isNull(successAssertions) && (!Objects.isNull(failureAssertions) || failureAssertionMap.size() > 0)) {
             testKo(response);
         }
     }
